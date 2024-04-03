@@ -1,63 +1,58 @@
 from utils import headers, url
-import requests
+import aiohttp
 import json
 import time
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import asyncio
 
 
-
-
-def get_data(url, next_key=None):
-    if next_key is not None:
-        url += f"&next={next_key}"
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        print(f"Failed to fetch data from {url}. Status code: {response.status_code}")
+async def fetch_data(session, url, next_key=None):
+    try:
+        if next_key is not None:
+            url += f"&next={next_key}"
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                print(f"Failed to fetch data from {url}. Status code: {response.status}")
+                return None
+    except aiohttp.ClientError as e:
+        print(f"An error occurred: {e}")
         return None
 
-def run_threads(next_key=None):
-    # results = []
-    count = 0
-    # print("How")
-    with ThreadPoolExecutor() as executor:
 
-        if next_key is None:
-            f = executor.submit(get_data, url=url)
-            res = f.result()
-            next_key = res["next"]
-            # print("bla")
-            # print(json.dumps(res, indent=4))
-        while next_key is not None:
-            # print("here")
-            count += 1
-            f = executor.submit(get_data, url=url, next_key=next_key)
-            res = f.result()
-            # print(res)
-            if "next" in res:
-                # print("Check")
-                next_key = res["next"]
-            else:
-                print("end")
-                next_key = None
-            print(count)
-            # print(json.dumps(res, indent=4))
-            # results.append(res)
-        with open("out1.json", "a") as outfile:
-            json.dump(res, outfile, indent=2)
+async def run_async():
+    try:
+        async with aiohttp.ClientSession() as session:
+            next_key = None
+            results = []
+            count = 0
+
+            for i in range(100):
+                count += 1
+                data = await fetch_data(session, url, next_key)
+                if data is None:
+                    break
+                if "next" in data:
+                    next_key = data["next"]
+                else:
+                    next_key = None
+                results.append(data)
+
+                # Introduce a delay between requests to avoid hitting rate limits
+                await asyncio.sleep(0.4)  # Adjust the delay as per API rate limits
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    with open("opensea.json", "w") as outfile:
+        json.dump(results, outfile, indent=2)
 
 
-
-def main():
-    with ProcessPoolExecutor() as executor:
-        run_threads()
-
+async def main():
+    await run_async()
 
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    main()
+    asyncio.run(main())
     end = time.perf_counter()
-    print(f"All the data is loaded in {end - start} time")
+    print(f"All the data is loaded in {end - start} seconds")
