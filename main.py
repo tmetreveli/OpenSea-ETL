@@ -3,6 +3,7 @@ import aiohttp
 import json
 import time
 import asyncio
+import uploadData as ud
 
 
 async def fetch_data(session, url, next_key=None):
@@ -36,6 +37,9 @@ async def run_async():
                     next_key = data["next"]
                 else:
                     next_key = None
+                with open("out1.json", "w") as outfile:
+                    json.dump(results, outfile, indent=2)
+                ud.upload_data(json.dumps(data, indent=4))
                 results.append(data)
 
                 # Introduce a delay between requests to avoid hitting rate limits

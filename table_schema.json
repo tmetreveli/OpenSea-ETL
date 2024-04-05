@@ -1,0 +1,14 @@
+{
+    "collection": "yukako-5",
+    "name": "YUKAKO",
+    "description": "",
+    "image_url": "",
+    "owner": "0x92fcf410b37ec3afe709f7f12a891562e6521fe8",
+    "twitter_username": "",
+    "contracts": [
+      {
+        "address": "0x92c076aff54ad423f9f6a34e1136e837d359a6f7",
+        "chain": "ethereum"
+      }
+    ]
+  }
