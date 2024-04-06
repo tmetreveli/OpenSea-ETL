@@ -4,6 +4,7 @@ import json
 import time
 import asyncio
 import uploadData as ud
+import customORM as co
 
 
 async def fetch_data(session, url, next_key=None):
@@ -28,7 +29,7 @@ async def run_async():
             results = []
             count = 0
 
-            for i in range(100):
+            while True:
                 count += 1
                 data = await fetch_data(session, url, next_key)
                 if data is None:
@@ -37,18 +38,20 @@ async def run_async():
                     next_key = data["next"]
                 else:
                     next_key = None
-                with open("out1.json", "w") as outfile:
-                    json.dump(results, outfile, indent=2)
-                ud.upload_data(json.dumps(data, indent=4))
+                # json_object = json.dumps(data, indent=4)
                 results.append(data)
+                # result_object = json.dumps(results, indent=2)
+                co.upload_data(data)
+                filename = str(count) + '.json'
+                with open(filename, "w") as outfile:
+                    json.dump(results, outfile, indent=2)
+
+                results = []
 
                 # Introduce a delay between requests to avoid hitting rate limits
-                await asyncio.sleep(0.4)  # Adjust the delay as per API rate limits
+                await asyncio.sleep(50)  # Adjust the delay as per API rate limits
     except Exception as e:
         print(f"An error occurred: {e}")
-
-    with open("opensea.json", "w") as outfile:
-        json.dump(results, outfile, indent=2)
 
 
 async def main():

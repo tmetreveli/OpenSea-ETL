@@ -4,4 +4,3 @@ headers = {
     "x-api-key": api_key,
 }
 url = "https://api.opensea.io/api/v2/collections?chain=ethereum"
-
