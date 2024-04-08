@@ -37,7 +37,6 @@ async def run_async():
     try:
         async with aiohttp.ClientSession() as session:
             next_key = None
-            # results = []
             count = 0
 
             while True:
@@ -55,7 +54,6 @@ async def run_async():
                 filename = str(count) + '.json'
                 await us.uploadS3(data, filename)
 
-                # results = []
                 # Calculate delay based on rate limit (4 requests per second)
                 rate_limit = 4  # requests per second
                 delay = 1 / rate_limit  # calculate delay in seconds

@@ -3,7 +3,7 @@ import psycopg2
 # Connect to your PostgreSQL database
 connection = psycopg2.connect(
         user="postgres",
-        password="maaz",
+        password="messi10",
         host="localhost",
         port="5432",
         database="opensea_collections"
