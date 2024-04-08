@@ -1,5 +1,4 @@
 import psycopg2
-import json
 import psycopg2.pool
 
 
@@ -16,6 +15,7 @@ connection_pool = psycopg2.pool.SimpleConnectionPool(
     database="opensea_collections"
 )
 
+
 def upload_data(datas):
     try:
         # Acquire a connection from the connection pool
@@ -23,12 +23,13 @@ def upload_data(datas):
         print('In Try')
         collections = datas['collections']
         # Extract only the desired fields from the JSON data
-      #  data_list = json.loads(datas)
+        #  data_list = json.loads(datas)
         for data in collections:
             data_to_upload = {key: data[key] for key in desired_fields if key in data}
 
             if 'contracts' in data:
-                contracts_data = data.get("contracts", [])  # Get the value associated with "contracts", or an empty list if not found
+                contracts_data = data.get("contracts", [])  # Get the value associated with "contracts", or an empty
+                # list if not found
                 if contracts_data:  # Check if contracts_data is not None and not an empty list
                     # Extract subkeys from the contracts_data
                     for key, value in contracts_data[0].items():

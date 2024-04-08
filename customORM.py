@@ -1,14 +1,13 @@
 import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, String, MetaData, Table
+from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-import json
 
 # Define the SQLAlchemy engine
 engine = create_engine('postgresql://postgres:messi10@localhost:5432/opensea_collections')
 
 # Define a base class for declarative class definitions
 Base = sqlalchemy.orm.declarative_base()
+
 
 # Define your SQLAlchemy model
 class OpenseaCollection(Base):
@@ -23,15 +22,19 @@ class OpenseaCollection(Base):
     contracts_address = Column(String)
     contracts_chain = Column(String)
 
+
 # Create the table if it doesn't exist
 Base.metadata.create_all(engine)
+
 
 # Read JSON data and insert into database
 def upload_data(datas):
     Session = sessionmaker(bind=engine)
     session = Session()
     collections = datas['collections']
+    count = 0
     for data in collections:
+        count += 1
         # Extract fields from data
         collection = data.get('collection')
         name = data.get('name')
@@ -39,7 +42,8 @@ def upload_data(datas):
         image_url = data.get('image_url')
         owner = data.get('owner')
         twitter_username = data.get('twitter_username')
-        contracts_data = data.get("contracts", [])  # Get the value associated with "contracts", or an empty list if not found
+        contracts_data = data.get("contracts", [])  # Get the value associated with "contracts",
+        # or an empty list if not found
         if contracts_data:  # Check if contracts_data is not None and not an empty list
             contracts_data = contracts_data[0]
             contracts_address = contracts_data.get('address')
@@ -59,6 +63,7 @@ def upload_data(datas):
 
     # Commit the session to save changes to the database
     session.commit()
+    print('total collections: ', count)
 
     # Close the session
     session.close()

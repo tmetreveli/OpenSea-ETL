@@ -1,5 +1,9 @@
 import psycopg2
 
+# Initialize connection and cursor to None
+connection = None
+cursor = None
+
 try:
     # Establish a connection to the default 'postgres' database
     connection = psycopg2.connect(

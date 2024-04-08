@@ -1,19 +1,30 @@
 from utils import headers, url
 import aiohttp
-import json
 import time
 import asyncio
-import uploadData as ud
 import customORM as co
+import uploadS3 as us
 
 
-async def fetch_data(session, url, next_key=None):
+async def fetch_data(session, url, chain=None, limit=100, next_key=None):
     try:
+        # Ensure that the limit does not exceed the maximum allowed value of 100
+        limit = min(limit, 100)
+
+        params = {
+            "limit": limit,
+        }
         if next_key is not None:
-            url += f"&next={next_key}"
-        async with session.get(url, headers=headers) as response:
+            params["next"] = next_key
+
+        async with session.get(url, headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.json()
+            elif response.status == 429:  # Rate limit exceeded
+                retry_after = int(response.headers.get('Retry-After', 1))
+                print(f"Rate limit exceeded. Retrying after {retry_after} seconds.")
+                await asyncio.sleep(retry_after)
+                return await fetch_data(session, url, chain, limit, next_key)  # Retry the request
             else:
                 print(f"Failed to fetch data from {url}. Status code: {response.status}")
                 return None
@@ -26,30 +37,31 @@ async def run_async():
     try:
         async with aiohttp.ClientSession() as session:
             next_key = None
-            results = []
+            # results = []
             count = 0
 
             while True:
                 count += 1
-                data = await fetch_data(session, url, next_key)
+                data = await fetch_data(session, url, chain="ethereum", limit=100, next_key=next_key)
+                print(len(data))
                 if data is None:
                     break
                 if "next" in data:
                     next_key = data["next"]
                 else:
                     next_key = None
-                # json_object = json.dumps(data, indent=4)
-                results.append(data)
-                # result_object = json.dumps(results, indent=2)
+
                 co.upload_data(data)
                 filename = str(count) + '.json'
-                with open(filename, "w") as outfile:
-                    json.dump(results, outfile, indent=2)
+                await us.uploadS3(data, filename)
 
-                results = []
+                # results = []
+                # Calculate delay based on rate limit (4 requests per second)
+                rate_limit = 4  # requests per second
+                delay = 1 / rate_limit  # calculate delay in seconds
 
                 # Introduce a delay between requests to avoid hitting rate limits
-                await asyncio.sleep(50)  # Adjust the delay as per API rate limits
+                await asyncio.sleep(delay)  # Adjust the delay as per API rate limits
     except Exception as e:
         print(f"An error occurred: {e}")
 

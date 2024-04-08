@@ -1,6 +1,10 @@
 import psycopg2
 import json
 
+# Initialize connection and cursor to None
+connection = None
+cursor = None
+
 # Read JSON data from file
 with open('table_schema.json') as json_file:
     data = json.load(json_file)
